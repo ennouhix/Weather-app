@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>⛅Weather App ⛅</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Weather Icons CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/index.css">
+    <!-- Font Awesome Icons for LinkedIn and GitHub -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        .suggestion-list {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-top: none;
+            position: absolute;
+            z-index: 999;
+            width: calc(100% - 2px);
+            background-color: white;
+            margin-top: 5px;
+        }
+        .suggestion-item {
+            padding: 8px;
+            cursor: pointer;
+            color: #333; /* Improved text color */
+        }
+        .suggestion-item:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* CSS pour le footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 18px;
+            background-color: #f1f1f1;
+            color: #333;
+            border-top: 2px solid #ccc;
+            position: absolute;
+            width: 100%;
+            bottom: 0;
+        }
+
+        .footer p {
+            margin: 0;
+        }
+
+        .footer i {
+            margin-left: 8px;
+            color: #007bff;
+            font-size: 24px; /* Adjust icon size */
+        }
+
+        .footer i:hover {
+            color: #0056b3;
+        }
+
+        /* Styling for social media links */
+        .footer .social-links a {
+            margin: 0 10px;
+            color: #333;
+            font-size: 24px;
+            text-decoration: none;
+        }
+
+        .footer .social-links a:hover {
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="card-title text-center">Weather App</h1>
+                    <form action="/weather" method="get">
+                        <div class="form-group position-relative">
+                            <!-- Input field with autocomplete feature -->
+                            <input type="text" class="form-control" name="city" id="city" placeholder="Enter city name" required autocomplete="off">
+                            <!-- Container for suggestions -->
+                            <div id="suggestions" class="suggestion-list" style="display: none;"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Get Weather</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer with mention "Developed by Ennouhi Yassir" and social media links -->
+<div class="footer">
+    <p>Developed by <strong>Ennouhi Yassir</strong> <i class="fas fa-code"></i></p>
+    <div class="social-links">
+        <a href="https://www.linkedin.com/in/ennouhiyassir/" target="_blank" title="LinkedIn">
+            <i class="fab fa-linkedin"></i>
+        </a>
+        <a href="https://github.com/ennouhix" target="_blank" title="GitHub">
+            <i class="fab fa-github"></i>
+        </a>
+    </div>
+</div>
+
+<!-- Bootstrap JS and dependencies -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    const geoNamesUsername = "ennouhi";  // Remplacez par votre nom d'utilisateur GeoNames
+
+    const cityInput = document.getElementById('city');
+    const suggestionsContainer = document.getElementById('suggestions');
+
+    cityInput.addEventListener('input', function() {
+        let query = this.value.trim();
+
+        // Vérifier si la saisie est suffisante pour lancer la recherche
+        if (query.length >= 2) {
+            fetch(`http://api.geonames.org/searchJSON?q=${query}&maxRows=10&username=${geoNamesUsername}`)
+                .then(response => response.json())
+                .then(data => {
+                    let suggestions = [];
+                    if (data.geonames) {
+                        suggestions = data.geonames.map(city => city.name + ', ' + city.countryName);
+                    }
+
+                    // Clear previous suggestions
+                    suggestionsContainer.innerHTML = '';
+
+                    // Display new suggestions
+                    if (suggestions.length > 0) {
+                        suggestions.forEach(city => {
+                            const listItem = document.createElement('div');
+                            listItem.classList.add('suggestion-item');
+                            listItem.textContent = city;
+                            listItem.addEventListener('click', function() {
+                                cityInput.value = city;
+                                closeSuggestions();
+                            });
+                            suggestionsContainer.appendChild(listItem);
+                        });
+                        suggestionsContainer.style.display = 'block'; // Show suggestions
+                    } else {
+                        suggestionsContainer.style.display = 'none'; // Hide if no match
+                    }
+                })
+                .catch(error => console.error('Error fetching data from GeoNames:', error));
+        } else {
+            suggestionsContainer.style.display = 'none'; // Hide suggestions if query is too short
+        }
+    });
+
+    function closeSuggestions() {
+        suggestionsContainer.style.display = 'none'; // Hide suggestions after selection
+    }
+
+    // Close suggestions if user clicks outside of the input field
+    document.addEventListener('click', function(event) {
+        if (!cityInput.contains(event.target)) {
+            closeSuggestions();
+        }
+    });
+</script>
+
+</body>
+</html>
